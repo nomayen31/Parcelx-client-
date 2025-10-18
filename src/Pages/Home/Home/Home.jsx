@@ -3,6 +3,7 @@ import BrandsName from '../BrandsName/BrandsName'
 import Features from '../Features/Features'
 import HowItWorksSection from '../HowItWorksSection/HowItWorksSection'
 import MerchantSection from '../MerchantSection/MerchantSection'
+import Review from '../Review/Review'
 import ServicesSection from '../Services/ServicesSection'
 
 const Home = () => {
@@ -14,6 +15,7 @@ const Home = () => {
       <BrandsName/>
       <Features/>
       <MerchantSection/>
+      <Review/>
     </div>
   )
 }
