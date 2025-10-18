@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import image1 from '../../../../public/assets/location-merchant.png';
 import image2 from '../../../../public/assets/tiny-deliveryman.png';
 import image3 from '../../../../public/assets/safedelivery.png';
 
+// Import AOS library and CSS
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+
 const Features = () => {
+    useEffect(() => {
+        AOS.init({
+            duration: 2000,   
+            delay: 300,      
+        });
+    }, []);
+
     const features = [
         {
             title: "Live Parcel Tracking",
@@ -23,18 +34,19 @@ const Features = () => {
     ];
 
     return (
-        <div className="py-16 px-6 flex justify-center ">
-            <div className="w-[1282px] max-w-full space-y-6 "> 
+        <div className="py-16 px-6 flex justify-center">
+            <div className="w-[1282px] max-w-full space-y-6">
                 {features.map((feature, idx) => (
-                    <div 
-                        key={idx} 
-                        className="bg-white rounded-2xl w-full h-[264px] flex items-center p-8 overflow-hidden" 
+                    <div
+                        key={idx}
+                        className="bg-white rounded-2xl w-full h-[264px] flex items-center p-8 overflow-hidden"
+                        data-aos="fade-up" 
                     >
                         <div className="w-[30%] h-full flex items-center justify-center flex-shrink-0">
-                            <img 
-                                src={feature.image} 
-                                alt={feature.title} 
-                                className="w-full max-w-[200px] h-auto object-contain" 
+                            <img
+                                src={feature.image}
+                                alt={feature.title}
+                                className="w-full max-w-[200px] h-auto object-contain"
                             />
                         </div>
                         <div className="h-full w-[1px] border-r-2 border-dotted border-gray-300 mx-10 flex-shrink-0"></div>
@@ -48,7 +60,7 @@ const Features = () => {
                         </div>
                     </div>
                 ))}
-                 <div className="mt-12 border-b-2 border-dashed border-gray-300 w-full max-w-6xl mx-auto"></div>
+                <div className="mt-12 border-b-2 border-dashed border-gray-300 w-full max-w-6xl mx-auto"></div>
             </div>
         </div>
     );
