@@ -1,3 +1,4 @@
+import FAQ from '../../Faq/Faq'
 import Banner from '../Banner/Banner'
 import BrandsName from '../BrandsName/BrandsName'
 import Features from '../Features/Features'
@@ -16,6 +17,7 @@ const Home = () => {
       <Features/>
       <MerchantSection/>
       <Review/>
+      <FAQ/>
     </div>
   )
 }
