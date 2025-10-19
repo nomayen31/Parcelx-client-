@@ -4,6 +4,7 @@ import Home from "../Pages/Home/Home/Home";
 import AuthLayout from "../Layouts/AuthLayout";
 import Login from "../Pages/Authentication/Login/Login";
 import Registration from "../Pages/Authentication/Login/Registation/Registration";
+import Coverage from "../Pages/coverage/Coverage";
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +15,10 @@ export const router = createBrowserRouter([
         index: true, 
         element: <Home />, 
       },
+      {
+        path:'/coverage',
+        element:<Coverage/>
+      }
     ],
   },
   {
