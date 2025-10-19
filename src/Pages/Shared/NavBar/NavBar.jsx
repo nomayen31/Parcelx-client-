@@ -51,14 +51,14 @@ const NavBar = () => {
           </Link>
 
           <Link
-            to="/signin"
+            to="/login"
             className="px-4 py-2 rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
           >
             Sign In
           </Link>
 
           <Link
-            to="/signup"
+            to="/register"
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-lime-400 text-gray-900 font-semibold hover:bg-lime-500 transition"
           >
             Sign Up
