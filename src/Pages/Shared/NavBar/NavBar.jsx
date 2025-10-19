@@ -34,6 +34,7 @@ const NavBar = () => {
           <li><Link to="/coverage" className="hover:text-gray-900">Coverage</Link></li>
           <li><Link to="/about" className="hover:text-gray-900">About Us</Link></li>
           <li><Link to="/pricing" className="hover:text-gray-900">Pricing</Link></li>
+            <li><Link to="/sendParcel" className="hover:text-gray-900">Send Parcel</Link></li>
         </ul>
 
         <div className="hidden lg:flex items-center gap-3">
