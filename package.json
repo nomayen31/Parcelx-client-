@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
     "aos": "^2.3.4",
+    "axios": "^1.12.2",
     "firebase": "^12.4.0",
     "leaflet": "^1.9.4",
     "react": "^19.1.1",
@@ -24,6 +25,7 @@
     "react-slick": "^0.31.0",
     "react-toastify": "^11.0.5",
     "slick-carousel": "^1.8.1",
+    "sweetalert2": "^11.26.3",
     "tailwindcss": "^4.1.14"
   },
   "devDependencies": {
