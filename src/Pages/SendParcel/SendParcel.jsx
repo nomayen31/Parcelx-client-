@@ -100,8 +100,8 @@ const SendParcel = () => {
 
             <input
               type="text"
-              placeholder="Parcel Title"
-              {...register("title", { required: "Parcel title is required" })}
+              placeholder="Describe Your Parcel"
+              {...register("title", { required: "Describe Your Parcel required" })}
               className="border border-gray-300 rounded-md p-3 w-full focus:ring-2 focus:ring-lime-400"
             />
 
