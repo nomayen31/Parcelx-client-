@@ -24,19 +24,51 @@ const NavBar = () => {
   return (
     <nav className="bg-white shadow-sm px-6 lg:px-16 py-4 rounded-2xl">
       <div className="flex justify-between items-center">
+        {/* Logo */}
         <div className="flex items-center gap-2">
           <img src={logo} alt="Logo" className="w-8 h-8" />
           <span className="text-xl font-extrabold text-gray-800">Parcelx</span>
         </div>
 
+        {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <li><Link to="/services" className="hover:text-gray-900">Services</Link></li>
-          <li><Link to="/coverage" className="hover:text-gray-900">Coverage</Link></li>
-          <li><Link to="/about" className="hover:text-gray-900">About Us</Link></li>
-          <li><Link to="/pricing" className="hover:text-gray-900">Pricing</Link></li>
-            <li><Link to="/sendParcel" className="hover:text-gray-900">Send Parcel</Link></li>
+          <li>
+            <Link to="/services" className="hover:text-gray-900">
+              Services
+            </Link>
+          </li>
+          <li>
+            <Link to="/coverage" className="hover:text-gray-900">
+              Coverage
+            </Link>
+          </li>
+          <li>
+            <Link to="/about" className="hover:text-gray-900">
+              About Us
+            </Link>
+          </li>
+          <li>
+            <Link to="/pricing" className="hover:text-gray-900">
+              Pricing
+            </Link>
+          </li>
+          <li>
+            <Link to="/sendParcel" className="hover:text-gray-900">
+              Send Parcel
+            </Link>
+          </li>
+
+          {/* ✅ Show Dashboard only when user is logged in */}
+          {user && (
+            <li>
+              <Link to="/dashboard" className="hover:text-gray-900">
+                Dashboard
+              </Link>
+            </li>
+          )}
         </ul>
 
+        {/* Desktop Auth Buttons */}
         <div className="hidden lg:flex items-center gap-3">
           {user ? (
             <div className="relative">
@@ -51,8 +83,12 @@ const NavBar = () => {
               )}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-36 bg-white shadow-md rounded-md py-2 z-50">
-                  <div className="px-3 py-2 text-sm text-gray-700">{user.displayName}</div>
-                  <div className="px-3 py-2 text-xs text-gray-500">{user.email}</div>
+                  <div className="px-3 py-2 text-sm text-gray-700">
+                    {user.displayName}
+                  </div>
+                  <div className="px-3 py-2 text-xs text-gray-500">
+                    {user.email}
+                  </div>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-2 text-red-500 hover:bg-gray-100 rounded-md"
@@ -91,6 +127,7 @@ const NavBar = () => {
           )}
         </div>
 
+        {/* Mobile Menu Button */}
         <div className="lg:hidden flex items-center">
           <button onClick={toggleMenu} className="text-gray-700">
             {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -98,15 +135,71 @@ const NavBar = () => {
         </div>
       </div>
 
+      {/* Mobile Dropdown Menu */}
       {isOpen && (
         <div className="lg:hidden mt-4 space-y-4">
           <ul className="flex flex-col gap-4 text-gray-600 font-medium">
-            <li><Link to="/services" onClick={toggleMenu} className="hover:text-gray-900">Services</Link></li>
-            <li><Link to="/coverage" onClick={toggleMenu} className="hover:text-gray-900">Coverage</Link></li>
-            <li><Link to="/about" onClick={toggleMenu} className="hover:text-gray-900">About Us</Link></li>
-            <li><Link to="/pricing" onClick={toggleMenu} className="hover:text-gray-900">Pricing</Link></li>
+            <li>
+              <Link
+                to="/services"
+                onClick={toggleMenu}
+                className="hover:text-gray-900"
+              >
+                Services
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/coverage"
+                onClick={toggleMenu}
+                className="hover:text-gray-900"
+              >
+                Coverage
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/about"
+                onClick={toggleMenu}
+                className="hover:text-gray-900"
+              >
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/pricing"
+                onClick={toggleMenu}
+                className="hover:text-gray-900"
+              >
+                Pricing
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/sendParcel"
+                onClick={toggleMenu}
+                className="hover:text-gray-900"
+              >
+                Send Parcel
+              </Link>
+            </li>
+
+            {/* ✅ Dashboard visible only if logged in */}
+            {user && (
+              <li>
+                <Link
+                  to="/dashboard"
+                  onClick={toggleMenu}
+                  className="hover:text-gray-900"
+                >
+                  Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
 
+          {/* Mobile Auth Buttons */}
           <div className="flex flex-col gap-3 mt-4">
             {user ? (
               <div className="relative">
@@ -121,8 +214,12 @@ const NavBar = () => {
                 )}
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-36 bg-white shadow-md rounded-md py-2 z-50">
-                    <div className="px-3 py-2 text-sm text-gray-700">{user.displayName}</div>
-                    <div className="px-3 py-2 text-xs text-gray-500">{user.email}</div>
+                    <div className="px-3 py-2 text-sm text-gray-700">
+                      {user.displayName}
+                    </div>
+                    <div className="px-3 py-2 text-xs text-gray-500">
+                      {user.email}
+                    </div>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-3 py-2 text-red-500 hover:bg-gray-100 rounded-md"

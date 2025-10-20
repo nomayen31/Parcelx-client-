@@ -7,40 +7,62 @@ import Registration from "../Pages/Authentication/Login/Registation/Registration
 import Coverage from "../Pages/coverage/Coverage";
 import SendParcel from "../Pages/SendParcel/SendParcel";
 import PrivateRoute from "../Routes/PrivateRoute";
+import DashbordLayout from "../Layouts/DashbordLayout";
+import MyParcels from "../Pages/Dashboard/MyParcels/MyParcels";
 
 export const router = createBrowserRouter([
+  // 🏠 MAIN WEBSITE ROUTES
   {
     path: "/",
     element: <MainLayouts />,
     children: [
       {
-        index: true, 
-        element: <Home />, 
+        index: true,
+        element: <Home />,
       },
       {
-        path:'/coverage',
-        element:<Coverage/>
+        path: "coverage",
+        element: <Coverage />,
       },
       {
-        path:'/sendParcel',
-        element:<PrivateRoute>
-          <SendParcel/>
-        </PrivateRoute>
-      }
+        path: "sendParcel",
+        element: (
+          <PrivateRoute>
+            <SendParcel />
+          </PrivateRoute>
+        ),
+      },
     ],
   },
+
+  // 🔐 AUTHENTICATION ROUTES
   {
-    path:'/',
-    element:<AuthLayout/>,
-    children:[
+    element: <AuthLayout />,
+    children: [
       {
-        path:'/login',
-        element:<Login/>
+        path: "login",
+        element: <Login />,
       },
       {
-        path:'/register',
-        element:<Registration/>
-      }
-    ]
-  }
+        path: "register",
+        element: <Registration />,
+      },
+    ],
+  },
+
+  {
+    path: "/dashboard",
+    element: (
+      <PrivateRoute>
+        <DashbordLayout />
+      </PrivateRoute>
+    ),
+    children: [
+      {
+        path: "myParcels",
+        element: <MyParcels />,
+      },
+
+    ],
+  },
 ]);
