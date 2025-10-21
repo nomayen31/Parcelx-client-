@@ -25,10 +25,10 @@ const NavBar = () => {
     <nav className="bg-white shadow-sm px-6 lg:px-16 py-4 rounded-2xl">
       <div className="flex justify-between items-center">
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <Link to='/' className="flex items-center gap-2">
           <img src={logo} alt="Logo" className="w-8 h-8" />
           <span className="text-xl font-extrabold text-gray-800">Parcelx</span>
-        </div>
+        </Link>
 
         {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-600">

@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaGoogle, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import UseAuth from '../../../Hooks/UseAuth';
-
 
 const Login = () => {
   const { signInUser, signInWithGoogle } = UseAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+
+  // Use location hook to get the previous location
+  const location = useLocation();
+
+  // Determine the 'from' path, default to '/' if not available
+  const from = location.state?.from || '/';
 
   const {
     register,
@@ -22,7 +27,8 @@ const Login = () => {
     try {
       const result = await signInUser(data.email, data.password);
       console.log('Login Success:', result.user);
-      navigate('/');
+      // Redirect to the previous page or root if not defined
+      navigate(from, { replace: true });
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -34,7 +40,8 @@ const Login = () => {
     try {
       const result = await signInWithGoogle();
       console.log('Google Sign-In Success:', result.user);
-      navigate('/');
+      // Redirect to the previous page or root if not defined
+      navigate(from, { replace: true });
     } catch (err) {
       console.error(err);
       setError(err.message);
