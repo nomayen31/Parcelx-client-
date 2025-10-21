@@ -1,15 +1,17 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MdDeleteSweep } from "react-icons/md";
-import { FaPen } from "react-icons/fa";
+import { TbCreditCardPay } from "react-icons/tb";
 import { GrView } from "react-icons/gr";
 import Swal from "sweetalert2";
 import UseAxiosSecure from "../../../Hooks/UseAxiosSecure";
 import UseAuth from "../../../Hooks/UseAuth";
+import { useNavigate } from "react-router-dom";
 
 const MyParcels = () => {
   const axiosSecure = UseAxiosSecure();
   const { user } = UseAuth();
+  const navigate = useNavigate();
 
   // 🟢 Fetch parcels using TanStack Query
   const {
@@ -27,6 +29,10 @@ const MyParcels = () => {
     },
     enabled: !!user?.email,
   });
+
+  const handlePay = async (id) => {
+    navigate(`/dashboard/payment/${id}`);
+  };
 
   // 🗑️ Delete function
   const handleDelete = async (id) => {
@@ -143,11 +149,13 @@ const MyParcels = () => {
                               <GrView className="w-5 h-5" />
                             </button>
 
+                            {/* Replace Pen Icon with Pay Icon */}
                             <button
-                              title="Edit"
-                              className="text-yellow-500 hover:text-yellow-600 hover:bg-gray-100 rounded-full p-2 transition flex items-center justify-center"
+                              onClick={() => handlePay(parcel._id)}
+                              title="Pay"
+                              className="text-green-500 hover:text-green-600 hover:bg-gray-100 rounded-full p-2 transition flex items-center justify-center"
                             >
-                              <FaPen className="w-4 h-4" />
+                              <TbCreditCardPay className="w-5 h-5" />
                             </button>
 
                             <button
