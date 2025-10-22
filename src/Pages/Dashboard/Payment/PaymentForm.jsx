@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { getNames, getCode } from "country-list";
 import UseAxiosSecure from "../../../Hooks/UseAxiosSecure";
+import UseAuth from "../../../Hooks/UseAuth";
 import { FaLock } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
+import Swal from "sweetalert2";
 import "react-toastify/dist/ReactToastify.css";
 
 const PaymentForm = () => {
@@ -14,6 +16,8 @@ const PaymentForm = () => {
   const axiosSecure = UseAxiosSecure();
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = UseAuth();
 
   // --- Form states ---
   const [name, setName] = useState("");
@@ -36,12 +40,30 @@ const PaymentForm = () => {
 
   const amountBDT = parcelData?.data?.deliveryCost ?? 0;
 
+  // Pre-fill dropdown + email from auth
   useEffect(() => setCountries(getNames()), []);
+  useEffect(() => {
+    if (user?.email) setEmail(user.email);
+    if (user?.displayName) setName((prev) => prev || user.displayName);
+  }, [user?.email, user?.displayName]);
 
   // --- Handle Payment ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+
+    if (!amountBDT || Number(amountBDT) <= 0) {
+      setErrorMsg("No amount due for this parcel.");
+      toast.error("No amount due for this parcel.");
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      setErrorMsg("Payment form is not ready. Please try again.");
+      toast.error("Payment form is not ready. Please try again.");
+      return;
+    }
 
     setSubmitting(true);
     setErrorMsg(null);
@@ -50,17 +72,18 @@ const PaymentForm = () => {
     try {
       const amountInSmallestUnit = Math.round(Number(amountBDT) * 100);
 
-      // Create PaymentIntent on backend
+      // 1) Create PaymentIntent on backend (attach parcelId + payerEmail in metadata)
       const intentRes = await axiosSecure.post("/create-payment-intent", {
         amountInCents: amountInSmallestUnit,
+        parcelId: id,
+        payerEmail: email,
       });
 
       const clientSecret = intentRes?.data?.clientSecret;
       if (!clientSecret) throw new Error("Missing client secret from server.");
 
-      // Confirm payment with Stripe
-      const cardElement = elements.getElement(CardElement);
-      const { error, paymentIntent } = await stripe.confirmCardPayment(
+      // 2) Confirm payment with Stripe
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
         clientSecret,
         {
           payment_method: {
@@ -77,20 +100,63 @@ const PaymentForm = () => {
         }
       );
 
-      if (error) throw error;
+      if (stripeError) throw stripeError;
 
+      // 3) Finalize on server (records payment + marks parcel Paid)
       if (paymentIntent?.status === "succeeded") {
+        await axiosSecure.post("/payments/confirm", {
+          parcelId: id,
+          paymentIntentId: paymentIntent.id,
+          amountInCents: amountInSmallestUnit,
+          currency: "usd", // switch consistently if you use BDT on server
+          payer: {
+            name,
+            email,
+            country: getCode(country) || "BD",
+            postal_code: postalCode || undefined,
+          },
+        });
+
         setSuccess(true);
-        toast.success("🎉 Payment successful!......");
-        setTimeout(() => navigate("/"), 3000);
+
+        // Refresh React Query caches so lists reflect "Paid"
+        queryClient.invalidateQueries({ queryKey: ["parcels"] });
+        queryClient.invalidateQueries({ queryKey: ["parcel", id] });
+
+        // SweetAlert success with Transaction ID + Go to My Parcels
+        const result = await Swal.fire({
+          icon: "success",
+          title: "Payment Successful!",
+          html: `
+            <div style="text-align:left">
+              <p><strong>Transaction ID:</strong></p>
+              <p><code style="user-select:all">${paymentIntent.id}</code></p>
+              <p style="margin-top:8px"><strong>Amount:</strong> ৳${amountBDT}</p>
+            </div>
+          `,
+          confirmButtonText: "Go to My Parcels",
+          confirmButtonColor: "#16a34a",
+          showCancelButton: true,
+          cancelButtonText: "Close",
+        });
+
+        if (result.isConfirmed) {
+          navigate("/dashboard/myParcels");
+        }
       } else if (paymentIntent?.status === "processing") {
-        setErrorMsg("Your payment is processing. Please wait.");
+        const msg = "Your payment is processing. Please wait.";
+        setErrorMsg(msg);
+        toast.info(msg);
       } else {
-        setErrorMsg("Payment did not complete. Please try again.");
+        const msg = "Payment did not complete. Please try again.";
+        setErrorMsg(msg);
+        toast.error(msg);
       }
     } catch (err) {
-      setErrorMsg(err.message || "Payment failed. Please try again.");
-      toast.error(" Payment failed. Please try again.");
+      // Bubble up more helpful server messages (404/400)
+      const msg = err?.response?.data?.message || err.message || "Payment failed. Please try again.";
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -115,54 +181,46 @@ const PaymentForm = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-10">
       <div className="w-full max-w-2xl bg-white p-8 sm:p-10 rounded-2xl shadow-2xl border border-gray-100">
-        <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-          Secure Payment
-        </h2>
+        <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Secure Payment</h2>
         <p className="text-sm text-gray-600 mb-8">
           You’re paying for parcel{" "}
           <span className="font-semibold">{id}</span>. Amount:{" "}
-          <span className="font-semibold">${amountBDT}</span>
+          <span className="font-semibold">৳{amountBDT}</span>
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* --- Name --- */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Name on Card
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Name on Card</label>
             <input
               type="text"
               placeholder="Your full name"
               className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-indigo-500"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              required
             />
           </div>
 
           {/* --- Email --- */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
             <input
               type="email"
               placeholder="you@example.com"
               className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-indigo-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
           {/* --- Billing Address --- */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">
-              Billing Address
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Billing Address</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Country
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
                 <select
                   className="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-indigo-500"
                   value={country}
@@ -177,9 +235,7 @@ const PaymentForm = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Postal Code
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code</label>
                 <input
                   type="text"
                   placeholder="e.g., 1260"
@@ -193,9 +249,7 @@ const PaymentForm = () => {
 
           {/* --- Card Details --- */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Card Details
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Card Details</label>
             <div className="p-3 border border-gray-300 rounded-lg bg-gray-50 focus-within:ring-2 focus-within:ring-indigo-500">
               <CardElement
                 options={{
@@ -239,12 +293,11 @@ const PaymentForm = () => {
                 : "bg-indigo-600 text-white hover:bg-indigo-700"
             }`}
           >
-            {submitting ? "Processing..." : `Pay Now ($${amountBDT})`}
+            {submitting ? "Processing..." : `Pay Now (৳${amountBDT})`}
           </button>
 
           <p className="text-center text-xs text-gray-500 mt-4">
-            <FaLock className="inline-block mr-1" /> Powered by Stripe. Your
-            payment is secure.
+            <FaLock className="inline-block mr-1" /> Powered by Stripe. Your payment is secure.
           </p>
         </form>
       </div>
