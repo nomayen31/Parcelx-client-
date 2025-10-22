@@ -1,22 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MdDeleteSweep } from "react-icons/md";
 import { TbCreditCardPay } from "react-icons/tb";
 import { GrView } from "react-icons/gr";
+import { FiDownload } from "react-icons/fi";
 import Swal from "sweetalert2";
 import UseAxiosSecure from "../../../Hooks/UseAxiosSecure";
 import UseAuth from "../../../Hooks/UseAuth";
 import { useNavigate } from "react-router-dom";
+import InvoicePDF from "../Payment/InvoicePDF";
 
 const MyParcels = () => {
   const axiosSecure = UseAxiosSecure();
   const { user } = UseAuth();
   const navigate = useNavigate();
-
-  // 🔵 Modal state
   const [selectedParcel, setSelectedParcel] = useState(null);
+  const invoiceRef = useRef();
 
-  // 🟢 Fetch parcels using TanStack Query
   const {
     data: parcels = { data: [] },
     isLoading,
@@ -34,7 +34,14 @@ const MyParcels = () => {
 
   const handlePay = (id) => navigate(`/dashboard/payment/${id}`);
 
-  // 🗑️ Delete function
+  const handleDownloadInvoice = (parcel) => {
+    if (invoiceRef.current) {
+      invoiceRef.current.download(parcel);
+    } else {
+      Swal.fire("Error!", "Invoice component not ready.", "error");
+    }
+  };
+
   const handleDelete = async (id) => {
     Swal.fire({
       title: "Are you sure?",
@@ -62,7 +69,6 @@ const MyParcels = () => {
     });
   };
 
-  // 🕒 Loading / Error states
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-64">
@@ -79,7 +85,7 @@ const MyParcels = () => {
 
   return (
     <section className="container px-4 mx-auto">
-      {/* Header Section */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-x-3">
           <h2 className="text-xl font-semibold text-gray-800">📦 My Parcels</h2>
@@ -96,7 +102,7 @@ const MyParcels = () => {
         </button>
       </div>
 
-      {/* Table Section */}
+      {/* Table */}
       <div className="flex flex-col mt-6">
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
@@ -131,22 +137,20 @@ const MyParcels = () => {
                           <td className="px-4 py-4 text-sm text-gray-800 font-semibold">{parcel.deliveryCost}</td>
                           <td className="px-4 py-4 text-sm">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                              }`}
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                }`}
                             >
                               {parcel.paymentStatus || "Unpaid"}
                             </span>
                           </td>
                           <td className="px-4 py-4 text-sm">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                parcel.status === "Delivered"
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${parcel.status === "Delivered"
                                   ? "bg-green-100 text-green-700"
                                   : parcel.status === "Pending"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-gray-100 text-gray-700"
-                              }`}
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-gray-100 text-gray-700"
+                                }`}
                             >
                               {parcel.status}
                             </span>
@@ -159,32 +163,39 @@ const MyParcels = () => {
                               {/* 👁️ View */}
                               <button
                                 onClick={() => setSelectedParcel(parcel)}
-                                title="View"
-                                className="text-blue-500 hover:text-blue-600 hover:bg-gray-100 rounded-full p-2 transition flex items-center justify-center"
+                                title="View Details"
+                                className="text-blue-500 hover:text-blue-600 hover:bg-gray-100 rounded-full p-2 transition"
                               >
                                 <GrView className="w-5 h-5" />
                               </button>
 
-                              {/* 💳 Pay (disabled when Paid) */}
-                              <button
-                                onClick={() => !isPaid && handlePay(parcel._id)}
-                                title={isPaid ? "Already paid" : "Pay"}
-                                disabled={isPaid}
-                                aria-disabled={isPaid}
-                                className={`rounded-full p-2 transition flex items-center justify-center ${
-                                  isPaid
-                                    ? "opacity-40 cursor-not-allowed text-gray-400"
-                                    : "text-green-500 hover:text-green-600 hover:bg-gray-100"
-                                }`}
-                              >
-                                <TbCreditCardPay className="w-5 h-5" />
-                              </button>
+                              {/* 💳 Pay */}
+                              {!isPaid && (
+                                <button
+                                  onClick={() => handlePay(parcel._id)}
+                                  title="Pay"
+                                  className="text-green-500 hover:text-green-600 hover:bg-gray-100 rounded-full p-2 transition"
+                                >
+                                  <TbCreditCardPay className="w-5 h-5" />
+                                </button>
+                              )}
 
-                              {/* 🗑️ Delete */}
+                              {/* 🧾 Download Invoice */}
+                              {isPaid && (
+                                <button
+                                  onClick={() => handleDownloadInvoice(parcel)}
+                                  title="Download Invoice"
+                                  className="text-indigo-500 hover:text-indigo-600 hover:bg-gray-100 rounded-full p-2 transition"
+                                >
+                                  <FiDownload className="w-5 h-5" />
+                                </button>
+                              )}
+
+                              {/* 🗑 Delete */}
                               <button
                                 onClick={() => handleDelete(parcel._id)}
                                 title="Delete"
-                                className="text-red-500 hover:text-red-600 hover:bg-gray-100 rounded-full p-2 transition flex items-center justify-center"
+                                className="text-red-500 hover:text-red-600 hover:bg-gray-100 rounded-full p-2 transition"
                               >
                                 <MdDeleteSweep className="w-5 h-5" />
                               </button>
@@ -210,59 +221,34 @@ const MyParcels = () => {
       {/* 🔵 Parcel Details Modal */}
       {selectedParcel && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white w-96 rounded-xl shadow-xl p-6 relative">
+          <div className="bg-white w-[500px] rounded-lg shadow-xl p-6 relative">
             <button
               onClick={() => setSelectedParcel(null)}
-              className="absolute top-2 right-3 text-gray-500 hover:text-red-600 text-lg font-bold"
+              className="absolute top-2 right-3 text-gray-500 hover:text-red-600 text-xl font-bold"
             >
               ✕
             </button>
-            <h3 className="text-xl font-bold text-indigo-700 mb-4">Parcel Details</h3>
+            <h3 className="text-xl font-bold text-[#035A6E] mb-4 border-b pb-2">Parcel Details</h3>
 
-            <div className="space-y-2 text-gray-700 text-sm">
-              <p>
-                <strong>Tracking ID:</strong> {selectedParcel.trackingId}
-              </p>
-              <p>
-                <strong>Title:</strong> {selectedParcel.title || "N/A"}
-              </p>
-              <p>
-                <strong>Type:</strong> {selectedParcel.type}
-              </p>
-              <p>
-                <strong>Weight:</strong> {selectedParcel.weight} kg
-              </p>
-              <p>
-                <strong>Delivery Cost:</strong> ৳{selectedParcel.deliveryCost}
-              </p>
-              <p>
-                <strong>Status:</strong> {selectedParcel.status || "Pending"}
-              </p>
-              <p>
-                <strong>Payment:</strong> {selectedParcel.paymentStatus || "Unpaid"}
-              </p>
+            <div className="space-y-2 text-sm text-gray-700">
+              <p><strong>Tracking ID:</strong> {selectedParcel.trackingId}</p>
+              <p><strong>Title:</strong> {selectedParcel.title}</p>
+              <p><strong>Type:</strong> {selectedParcel.type}</p>
+              <p><strong>Status:</strong> {selectedParcel.status}</p>
+              <p><strong>Weight:</strong> {selectedParcel.weight || "N/A"} kg</p>
+              <p><strong>Delivery Cost:</strong> ৳{selectedParcel.deliveryCost}</p>
+              <p><strong>Payment:</strong> {selectedParcel.paymentStatus}</p>
+              <p><strong>Sender:</strong> {selectedParcel.senderName} ({selectedParcel.senderContact})</p>
+              <p><strong>Receiver:</strong> {selectedParcel.receiverName} ({selectedParcel.receiverContact})</p>
+              <p><strong>Pickup Instruction:</strong> {selectedParcel.pickupInstruction}</p>
+              <p><strong>Delivery Instruction:</strong> {selectedParcel.deliveryInstruction}</p>
+              <p><strong>Created:</strong> {selectedParcel.createdAtReadable}</p>
             </div>
 
-            <div className="mt-6 flex justify-center space-x-4">
-              {(() => {
-                const selectedIsPaid = selectedParcel?.paymentStatus === "Paid";
-                return (
-                  <button
-                    onClick={() => !selectedIsPaid && handlePay(selectedParcel._id)}
-                    disabled={selectedIsPaid}
-                    aria-disabled={selectedIsPaid}
-                    className={`text-white px-4 py-2 rounded-lg flex items-center gap-2 ${
-                      selectedIsPaid ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
-                    }`}
-                  >
-                    <TbCreditCardPay /> {selectedIsPaid ? "Paid" : "Pay Now"}
-                  </button>
-                );
-              })()}
-
+            <div className="mt-5 flex justify-center">
               <button
                 onClick={() => setSelectedParcel(null)}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500"
+                className="bg-gray-400 text-white px-5 py-2 rounded-lg hover:bg-gray-500"
               >
                 Close
               </button>
@@ -270,6 +256,16 @@ const MyParcels = () => {
           </div>
         </div>
       )}
+
+      {/* 🧾 Hidden InvoicePDF for download */}
+      <div className="hidden">
+        <InvoicePDF
+          ref={invoiceRef}
+          parcel={selectedParcel}
+          user={user}
+          logoUrl="https://lh3.googleusercontent.com/-VmPoLgXniik/AAAAAAAAAAI/AAAAAAAAAAA/ALKGfkmBNDlm-qM0ETVbrbEfrxozZMVliQ/photo.jpg?sz=46"
+        />
+      </div>
     </section>
   );
 };

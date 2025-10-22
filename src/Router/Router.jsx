@@ -10,6 +10,8 @@ import PrivateRoute from "../Routes/PrivateRoute";
 import DashbordLayout from "../Layouts/DashbordLayout";
 import MyParcels from "../Pages/Dashboard/MyParcels/MyParcels";
 import Payment from "../Pages/Dashboard/Payment/Payment";
+import PaymentHistory from "../Pages/Dashboard/PaymentHistory/PaymentHistory";
+import TrackParcel from "../Pages/Dashboard/TrackParcel/TrackParcel";
 
 export const router = createBrowserRouter([
   // 🏠 MAIN WEBSITE ROUTES
@@ -66,6 +68,14 @@ export const router = createBrowserRouter([
       {
         path:'payment/:id',
         element:<Payment/>
+      },
+      {
+        path:'paymenthistory',
+        element:<PaymentHistory/>
+      },
+      {
+          path:'track',
+          element:<TrackParcel/>
       }
 
     ],

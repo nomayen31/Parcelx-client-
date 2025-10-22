@@ -1,47 +1,56 @@
 import React, { useState } from "react";
 import { NavLink, Link, Outlet } from "react-router-dom";
-import { FiMenu, FiX, FiPackage, FiSend } from "react-icons/fi";
+import {
+  FiMenu,
+  FiX,
+  FiPackage,
+  FiSend,
+  FiCreditCard,
+  FiUser,
+  FiMapPin,
+} from "react-icons/fi";
 
 const DashbordLayout = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
 
+  const navItemClass = ({ isActive }) =>
+    `flex items-center gap-2 px-2 py-1.5 rounded-md transition ${
+      isActive
+        ? "text-lime-300 font-semibold bg-gray-800"
+        : "hover:text-lime-300 text-gray-300 hover:bg-gray-800"
+    }`;
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-gray-50">
-      {/* 🧭 Sidebar (visible on large screens) */}
+      {/* 🧭 Sidebar (desktop) */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-gray-900 text-white px-6 py-8 overflow-y-auto fixed inset-y-0 left-0">
         <h2 className="text-2xl font-bold mb-10">ParcelX Dashboard</h2>
 
-        <nav className="flex flex-col gap-5">
-          <NavLink
-            to="/dashboard/myParcels"
-            className={({ isActive }) =>
-              `flex items-center gap-2 transition ${
-                isActive
-                  ? "text-lime-300 font-semibold"
-                  : "hover:text-lime-300 text-gray-300"
-              }`
-            }
-          >
+        <nav className="flex flex-col gap-4">
+          <NavLink to="/dashboard/myParcels" className={navItemClass}>
             <FiPackage /> My Parcels
           </NavLink>
 
-          <NavLink
-            to="/sendParcel"
-            className={({ isActive }) =>
-              `flex items-center gap-2 transition ${
-                isActive
-                  ? "text-lime-300 font-semibold"
-                  : "hover:text-lime-300 text-gray-300"
-              }`
-            }
-          >
+          <NavLink to="/dashboard/paymenthistory" className={navItemClass}>
+            <FiCreditCard /> Payment History
+          </NavLink>
+
+          <NavLink to="/dashboard/track" className={navItemClass}>
+            <FiMapPin /> Track A Package
+          </NavLink>
+
+          <NavLink to="/dashboard/profile" className={navItemClass}>
+            <FiUser /> Profile
+          </NavLink>
+
+          <NavLink to="/sendParcel" className={navItemClass}>
             <FiSend /> Send Parcel
           </NavLink>
         </nav>
       </aside>
 
-      {/* 📱 Navbar (visible on small screens) */}
+      {/* 📱 Mobile Navbar */}
       <div className="lg:hidden bg-gray-900 text-white flex items-center justify-between p-4 shadow-md">
         <h2 className="text-xl font-semibold">ParcelX</h2>
         <button onClick={toggleMenu} aria-label="Toggle dashboard menu">
@@ -49,7 +58,7 @@ const DashbordLayout = () => {
         </button>
       </div>
 
-      {/* 📋 Mobile dropdown menu */}
+      {/* 📱 Mobile Dropdown Menu */}
       {isOpen && (
         <div className="lg:hidden bg-gray-800 text-white flex flex-col items-start p-4 space-y-3">
           <Link
@@ -58,6 +67,27 @@ const DashbordLayout = () => {
             className="hover:text-lime-300"
           >
             My Parcels
+          </Link>
+          <Link
+            to="/dashboard/paymenthistory"
+            onClick={() => setIsOpen(false)}
+            className="hover:text-lime-300"
+          >
+            Payment History
+          </Link>
+          <Link
+            to="/dashboard/track"
+            onClick={() => setIsOpen(false)}
+            className="hover:text-lime-300"
+          >
+            Track A Package
+          </Link>
+          <Link
+            to="/dashboard/profile"
+            onClick={() => setIsOpen(false)}
+            className="hover:text-lime-300"
+          >
+            Profile
           </Link>
           <Link
             to="/sendParcel"
