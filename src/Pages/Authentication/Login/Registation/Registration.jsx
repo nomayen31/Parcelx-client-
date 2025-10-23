@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { Link, useNavigate } from "react-router-dom";
 import UseAuth from "../../../../Hooks/UseAuth";
 import axios from "axios";
-import UseAxiosSecure from "../../../../Hooks/UseAxiosSecure";
 
 const Registration = () => {
   const { createNewUser, signInWithGoogle, updateUser } = UseAuth();
-  const axiosSecure = UseAxiosSecure();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -21,14 +20,19 @@ const Registration = () => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ Handle text field changes
+  // ✅ Password regex (strong and Firebase-safe)
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
+
+  // ✅ Input handler (no validation here, only store)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // ✅ Handle image upload to ImgBB
+  // ✅ Handle image upload
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -42,13 +46,10 @@ const Registration = () => {
       setLoading(true);
       const apiKey = import.meta.env.VITE_IMAGE_UPLOAD_KEY;
       const response = await axios.post(
-        `https://api.imgbb.com/1/upload?expiration=600&key=${apiKey}`,
+        `https://api.imgbb.com/1/upload?key=${apiKey}`,
         formDataToSend
       );
-
       const imageUrl = response.data.data.url;
-      console.log("✅ Uploaded Image URL:", imageUrl);
-
       setFormData((prev) => ({ ...prev, image: imageUrl }));
     } catch (error) {
       console.error("❌ Image upload failed:", error);
@@ -58,16 +59,14 @@ const Registration = () => {
     }
   };
 
-  // ✅ Password validation
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-  // ✅ Submit handler
+  // ✅ Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(""); // clear any old error
 
-    if (!passwordRegex.test(formData.password)) {
+    const password = formData.password.trim();
+
+    if (!passwordRegex.test(password)) {
       setError(
         "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
       );
@@ -77,47 +76,66 @@ const Registration = () => {
     try {
       setLoading(true);
 
-      // 1️⃣ Create Firebase Auth user
-      const result = await createNewUser(formData.email, formData.password);
-      console.log("🆕 User created:", result.user);
+      // Create Firebase user
+      const result = await createNewUser(formData.email, password);
 
-      // 2️⃣ Update Firebase profile
+      // Update Firebase profile
       await updateUser({
         displayName: formData.name,
         photoURL: formData.image,
       });
-      console.log("✅ Firebase profile updated.");
 
-      // 3️⃣ Save user data securely to your backend
+      // Save user to backend
       const userInfo = {
+        uid: result.user.uid,
         name: formData.name,
         email: formData.email,
         image: formData.image,
-        createdAt: new Date(),
         role: "user",
+        createdAt: new Date().toISOString(),
+        provider: "email",
       };
 
-      const res = await axiosSecure.post("/users", userInfo);
-      console.log("✅ User saved to DB:", res.data);
+      await axios.post("http://localhost:5000/users", userInfo);
 
       alert("🎉 Registration successful!");
       navigate("/");
     } catch (err) {
       console.error("Registration error:", err);
-      setError(err.message);
+
+      if (err.code === "auth/email-already-in-use") {
+        setError("This email is already registered. Please log in.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password is too weak. Please choose a stronger password.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Google login
+  // ✅ Handle Google login
   const handleGoogleLogin = async () => {
-    setError("");
-    setLoading(true);
     try {
+      setLoading(true);
       const result = await signInWithGoogle();
-      console.log("✅ Google Sign-In:", result.user);
-      alert("Logged in successfully with Google!");
+      const user = result.user;
+
+      const userInfo = {
+        uid: user.uid,
+        name: user.displayName,
+        email: user.email,
+        image: user.photoURL,
+        role: "user",
+        createdAt: new Date().toISOString(),
+        provider: "google",
+      };
+
+      await axios.post("http://localhost:5000/users", userInfo);
+      alert("✅ Logged in with Google!");
       navigate("/");
     } catch (err) {
       console.error(err);
@@ -127,7 +145,6 @@ const Registration = () => {
     }
   };
 
-  // ✅ JSX UI
   return (
     <div className="flex justify-center items-center h-screen bg-gray-50">
       <div className="w-[400px] bg-white p-8 rounded-lg shadow-lg border border-gray-100">
@@ -136,7 +153,7 @@ const Registration = () => {
         </h2>
         <p className="text-center text-gray-500 mb-6">Register with ParcelX</p>
 
-        {/* ✅ Profile Image Upload */}
+        {/* Profile Image Upload */}
         <div className="flex justify-center mb-4">
           <label htmlFor="profileImage" className="relative cursor-pointer group">
             {preview ? (
@@ -167,48 +184,55 @@ const Registration = () => {
           <p className="text-red-500 text-center text-sm mb-4">{error}</p>
         )}
 
-        {/* ✅ Registration Form */}
+        {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="Name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400"
-              required
-            />
-          </div>
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-400"
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-400"
+            required
+          />
 
-          <div className="mb-4">
+          {/* Password field with eye toggle */}
+          <div className="relative mb-6">
             <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400"
-              required
-            />
-          </div>
-
-          <div className="mb-6">
-            <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400"
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-400 pr-10"
               required
             />
+            <button
+              type="button"
+              className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? (
+                <AiFillEyeInvisible className="text-2xl" />
+              ) : (
+                <AiFillEye className="text-2xl" />
+              )}
+            </button>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-lime-400 hover:bg-lime-500 text-white font-semibold py-3 rounded-md transition duration-300 ${
+            className={`w-full bg-lime-400 hover:bg-lime-500 text-white font-semibold py-3 rounded-md transition ${
               loading ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >
@@ -216,15 +240,12 @@ const Registration = () => {
           </button>
         </form>
 
-        <div className="text-center text-sm text-gray-500 mt-4">
+        <p className="text-center text-sm text-gray-500 mt-4">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-lime-500 hover:underline cursor-pointer"
-          >
+          <Link to="/login" className="text-lime-500 hover:underline">
             Login
           </Link>
-        </div>
+        </p>
 
         <div className="flex items-center justify-center my-4">
           <span className="text-gray-400 text-sm">Or</span>
@@ -233,7 +254,7 @@ const Registration = () => {
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center border border-gray-300 rounded-md py-3 hover:bg-gray-100 transition duration-300"
+          className="w-full flex items-center justify-center border border-gray-300 rounded-md py-3 hover:bg-gray-100 transition"
         >
           <FcGoogle className="text-xl mr-2" />
           Continue with Google
