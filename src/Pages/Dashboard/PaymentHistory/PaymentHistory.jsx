@@ -1,54 +1,38 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Area,
-  AreaChart,
 } from "recharts";
 import UseAuth from "../../../Hooks/UseAuth";
 import UseAxiosSecure from "../../../Hooks/UseAxiosSecure";
 
 const PaymentHistory = () => {
-  const { user } = UseAuth();
+  const { user, loading: authLoading } = UseAuth() || {};
   const axiosSecure = UseAxiosSecure();
 
-  // Fetch payments
-  const {
-    data: paymentsData = { data: [] },
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["payments", user?.email],
+  // ✅ Fetch payments data from backend
+  const queryResult = useQuery({
+    queryKey: ["payments", user?.email || "guest"],
     queryFn: async () => {
       const res = await axiosSecure.get(`/payments?email=${user.email}`);
-      return res.data;
+      console.log("✅ Backend Response:", res.data);
+      return res.data; // backend returns { success, total, data: [] }
     },
     enabled: !!user?.email,
+    staleTime: 1000 * 60 * 5,
   });
 
-  if (isLoading)
-    return (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-gray-600 animate-pulse">Loading payment history...</p>
-      </div>
-    );
-
-  if (isError)
-    return (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-red-500">Failed to load payment history.</p>
-      </div>
-    );
-
+  // ✅ Safely extract query results
+  const { data: paymentsData = {}, isLoading, isError } = queryResult;
   const payments = paymentsData?.data || [];
 
-  // Process chart data
+  // ✅ Prepare chart data
   const chartData = useMemo(() => {
     const map = {};
     payments.forEach((p) => {
@@ -66,22 +50,54 @@ const PaymentHistory = () => {
     }));
   }, [payments]);
 
+  // ✅ Loading states
+  if (authLoading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-gray-600 animate-pulse">Loading user info...</p>
+      </div>
+    );
+
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="w-8 h-8 mx-auto border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-gray-600">Loading payment history...</p>
+        </div>
+      </div>
+    );
+
+  if (isError)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-red-500 font-medium">
+          ⚠️ Failed to load payment history.
+        </p>
+      </div>
+    );
+
+  // ✅ Render the chart + table
   return (
     <section className="container px-4 mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-x-3">
-          <h2 className="text-xl font-semibold text-gray-800">💳 Payment History</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            💳 Payment History
+          </h2>
           <span className="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full">
             {payments.length} Payments
           </span>
         </div>
       </div>
 
-      {/* Unique Gradient Chart */}
+      {/* Chart */}
       {chartData.length > 0 ? (
         <div className="mb-10 bg-gradient-to-br from-indigo-50 to-purple-50 border border-gray-200 rounded-xl p-6 shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Payment Trend (৳)</h3>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+            Payment Trend (৳)
+          </h3>
           <div style={{ width: "100%", height: 340 }}>
             <ResponsiveContainer>
               <AreaChart
@@ -142,7 +158,7 @@ const PaymentHistory = () => {
         </div>
       )}
 
-      {/* Table Section */}
+      {/* Table */}
       <div className="flex flex-col">
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
@@ -207,10 +223,13 @@ const PaymentHistory = () => {
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-500">
                           {payment.createdAt
-                            ? new Date(payment.createdAt).toLocaleString("en-BD", {
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              })
+                            ? new Date(payment.createdAt).toLocaleString(
+                                "en-BD",
+                                {
+                                  dateStyle: "medium",
+                                  timeStyle: "short",
+                                }
+                              )
                             : "N/A"}
                         </td>
                       </tr>
