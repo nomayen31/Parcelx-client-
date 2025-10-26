@@ -16,23 +16,23 @@ const PaymentHistory = () => {
   const { user, loading: authLoading } = UseAuth() || {};
   const axiosSecure = UseAxiosSecure();
 
-  // ✅ Fetch payments data from backend
+  // Fetch payments data from backend
   const queryResult = useQuery({
     queryKey: ["payments", user?.email || "guest"],
     queryFn: async () => {
       const res = await axiosSecure.get(`/payments?email=${user.email}`);
-      console.log("✅ Backend Response:", res.data);
+      console.log("Backend Response:", res.data);
       return res.data; // backend returns { success, total, data: [] }
     },
     enabled: !!user?.email,
     staleTime: 1000 * 60 * 5,
   });
 
-  // ✅ Safely extract query results
+  // Extract query results
   const { data: paymentsData = {}, isLoading, isError } = queryResult;
   const payments = paymentsData?.data || [];
 
-  // ✅ Prepare chart data
+  // Prepare chart data
   const chartData = useMemo(() => {
     const map = {};
     payments.forEach((p) => {
@@ -50,7 +50,7 @@ const PaymentHistory = () => {
     }));
   }, [payments]);
 
-  // ✅ Loading states
+  // Loading states
   if (authLoading)
     return (
       <div className="flex justify-center items-center h-64">
@@ -77,7 +77,6 @@ const PaymentHistory = () => {
       </div>
     );
 
-  // ✅ Render the chart + table
   return (
     <section className="container px-4 mx-auto">
       {/* Header */}
@@ -111,28 +110,9 @@ const PaymentHistory = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#6b7280"
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#6b7280"
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v) => `৳${v}`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    borderRadius: "10px",
-                    border: "1px solid #e5e7eb",
-                    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-                  }}
-                  labelStyle={{ color: "#4f46e5", fontWeight: 600 }}
-                  formatter={(val) => [`৳${val.toFixed(2)}`, "Total Paid"]}
-                />
+                <XAxis dataKey="date" stroke="#6b7280" tickLine={false} axisLine={false} />
+                <YAxis stroke="#6b7280" tickLine={false} axisLine={false} tickFormatter={(v) => `৳${v}`} />
+                <Tooltip contentStyle={{ backgroundColor: "#fff", borderRadius: "10px", border: "1px solid #e5e7eb", boxShadow: "0 4px 10px rgba(0,0,0,0.05)" }} labelStyle={{ color: "#4f46e5", fontWeight: 600 }} formatter={(val) => [`৳${val.toFixed(2)}`, "Total Paid"]} />
                 <Area
                   type="monotone"
                   dataKey="total"
@@ -140,12 +120,7 @@ const PaymentHistory = () => {
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorTotal)"
-                  activeDot={{
-                    r: 7,
-                    stroke: "#4f46e5",
-                    strokeWidth: 3,
-                    fill: "#fff",
-                  }}
+                  activeDot={{ r: 7, stroke: "#4f46e5", strokeWidth: 3, fill: "#fff" }}
                   animationDuration={1200}
                 />
               </AreaChart>
@@ -166,80 +141,35 @@ const PaymentHistory = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    {[
-                      "Payment ID",
-                      "Parcel ID",
-                      "Amount",
-                      "Currency",
-                      "Country",
-                      "Status",
-                      "Date",
-                    ].map((header) => (
-                      <th
-                        key={header}
-                        className="px-4 py-3.5 text-left text-sm font-semibold text-gray-600"
-                      >
-                        {header}
-                      </th>
-                    ))}
+                    <th className="px-4 py-3.5 text-left text-sm font-semibold text-gray-600">Payment ID</th>
+                    <th className="px-4 py-3.5 text-left text-sm font-semibold text-gray-600">Parcel ID</th>
+                    <th className="px-4 py-3.5 text-left text-sm font-semibold text-gray-600">Amount</th>
+                    <th className="px-4 py-3.5 text-left text-sm font-semibold text-gray-600">Currency</th>
+                    <th className="px-4 py-3.5 text-left text-sm font-semibold text-gray-600">Country</th>
+                    <th className="px-4 py-3.5 text-left text-sm font-semibold text-gray-600">Status</th>
+                    <th className="px-4 py-3.5 text-left text-sm font-semibold text-gray-600">Date</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {payments.length > 0 ? (
                     payments.map((payment) => (
-                      <tr
-                        key={payment._id || payment.paymentIntentId}
-                        className="hover:bg-indigo-50 transition-colors duration-150"
-                      >
-                        <td className="px-4 py-4 text-sm text-gray-700">
-                          {payment.paymentIntentId}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-600">
-                          {typeof payment.parcelId === "object"
-                            ? payment.parcelId.$oid || "ObjectId"
-                            : payment.parcelId}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-800 font-semibold">
-                          {payment.amount
-                            ? (payment.amount / 100).toFixed(2)
-                            : "—"}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-600 uppercase">
-                          {payment.currency || "USD"}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-600">
-                          {payment.country || "N/A"}
-                        </td>
+                      <tr key={payment._id || payment.paymentIntentId} className="hover:bg-indigo-50 transition-colors duration-150">
+                        <td className="px-4 py-4 text-sm text-gray-700">{payment.paymentIntentId}</td>
+                        <td className="px-4 py-4 text-sm text-gray-600">{payment.parcelId}</td>
+                        <td className="px-4 py-4 text-sm text-gray-800 font-semibold">{(payment.amount / 100).toFixed(2)}</td>
+                        <td className="px-4 py-4 text-sm text-gray-600 uppercase">{payment.currency}</td>
+                        <td className="px-4 py-4 text-sm text-gray-600">{payment.country}</td>
                         <td className="px-4 py-4 text-sm">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              payment.status === "succeeded"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${payment.status === "succeeded" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                             {payment.status || "Pending"}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {payment.createdAt
-                            ? new Date(payment.createdAt).toLocaleString(
-                                "en-BD",
-                                {
-                                  dateStyle: "medium",
-                                  timeStyle: "short",
-                                }
-                              )
-                            : "N/A"}
-                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500">{new Date(payment.createdAt).toLocaleString()}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td
-                        colSpan="7"
-                        className="px-4 py-6 text-sm text-center text-gray-500"
-                      >
+                      <td colSpan="7" className="px-4 py-6 text-sm text-center text-gray-500">
                         No payment records found.
                       </td>
                     </tr>

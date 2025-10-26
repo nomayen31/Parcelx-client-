@@ -8,6 +8,8 @@ import {
   FiCreditCard,
   FiUser,
   FiMapPin,
+  FiUsers, // Icon for Active Riders
+  FiClock, // Icon for Pending Riders
 } from "react-icons/fi";
 
 const DashbordLayout = () => {
@@ -46,6 +48,15 @@ const DashbordLayout = () => {
 
           <NavLink to="/sendParcel" className={navItemClass}>
             <FiSend /> Send Parcel
+          </NavLink>
+
+          {/* New Links */}
+          <NavLink to="/dashboard/activeRiders" className={navItemClass}>
+            <FiUsers /> Active Riders
+          </NavLink>
+
+          <NavLink to="/dashboard/pendingRiders" className={navItemClass}>
+            <FiClock /> Pending Riders
           </NavLink>
         </nav>
       </aside>
@@ -95,6 +106,23 @@ const DashbordLayout = () => {
             className="hover:text-lime-300"
           >
             Send Parcel
+          </Link>
+
+          {/* New Links in Mobile Menu */}
+          <Link
+            to="/dashboard/activeRiders"
+            onClick={() => setIsOpen(false)}
+            className="hover:text-lime-300"
+          >
+            <FiUsers /> Active Riders
+          </Link>
+
+          <Link
+            to="/dashboard/pendingRiders"
+            onClick={() => setIsOpen(false)}
+            className="hover:text-lime-300"
+          >
+            <FiClock /> Pending Riders
           </Link>
         </div>
       )}

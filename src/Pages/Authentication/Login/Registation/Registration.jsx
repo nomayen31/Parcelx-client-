@@ -117,13 +117,11 @@ const Registration = () => {
     }
   };
 
-  // ✅ Handle Google login
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
       const result = await signInWithGoogle();
       const user = result.user;
-
       const userInfo = {
         uid: user.uid,
         name: user.displayName,
@@ -133,9 +131,8 @@ const Registration = () => {
         createdAt: new Date().toISOString(),
         provider: "google",
       };
-
       await axios.post("http://localhost:5000/users", userInfo);
-      alert("✅ Logged in with Google!");
+      alert("Logged in with Google!");
       navigate("/");
     } catch (err) {
       console.error(err);
