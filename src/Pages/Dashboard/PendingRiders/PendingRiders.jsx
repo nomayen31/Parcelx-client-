@@ -1,145 +1,162 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import UseAxiosSecure from "../../../Hooks/UseAxiosSecure"; // Axios secure hook for authorized requests
+import UseAxiosSecure from "../../../Hooks/UseAxiosSecure";
 import Swal from "sweetalert2";
 
-// Fetching function to get the pending riders
-const fetchPendingRiders = async () => {
-  const axiosSecure = UseAxiosSecure();
-  try {
-    const { data } = await axiosSecure.get("/riders/pending");
-    return data;
-  } catch (error) {
-    console.error("Error fetching riders:", error);
-    throw error; // Re-throw the error for query to handle
-  }
-};
-
 const PendingRiders = () => {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["pendingRiders"], // Query key should be an array
-    queryFn: fetchPendingRiders, // The function to fetch data
-  });
-
+  const axiosSecure = UseAxiosSecure();
   const [selectedRider, setSelectedRider] = useState(null);
 
+  // Fetch function inside component so it can access axiosSecure
+  const fetchPendingRiders = async () => {
+    const { data } = await axiosSecure.get("/riders/pending");
+    return data;
+  };
+
+  // React Query hook
+  const {
+    data = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["pendingRiders"],
+    queryFn: fetchPendingRiders,
+  });
+
+  // Handle approve or reject
   const handleApproveReject = (id, action) => {
     const status = action === "approve" ? "Approved" : "Rejected";
-    // Call mutation to approve/reject rider
 
     Swal.fire({
       title: `${status === "Approved" ? "Approve" : "Reject"} Rider`,
       text: `Are you sure you want to ${status.toLowerCase()} this rider?`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: `${status}`,
+      confirmButtonText: status,
       cancelButtonText: "Cancel",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        // Call the API to update the rider's status
-        fetch(`/riders/${id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ status }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }).then(() => {
+        try {
+          await axiosSecure.patch(`/riders/${id}`, { status });
           Swal.fire("Success!", `Rider ${status}`, "success");
-        });
+          refetch(); // 🔄 refresh table after update
+        } catch (error) {
+          console.error("Error updating rider:", error);
+          Swal.fire("Error", "Failed to update rider status.", "error");
+        }
       }
     });
   };
 
-  // Handle opening modal with rider details
-  const openModal = (rider) => {
-    setSelectedRider(rider);
-  };
+  // Modal functions
+  const openModal = (rider) => setSelectedRider(rider);
+  const closeModal = () => setSelectedRider(null);
 
-  // Handle closing modal
-  const closeModal = () => {
-    setSelectedRider(null);
-  };
-
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error fetching pending riders</div>;
+  if (isLoading) return <div className="p-6 text-center"><span className="loading loading-spinner loading-lg text-primary"></span></div>;
+  if (isError) return <div className="p-6 text-center text-error font-semibold">Error fetching pending riders.</div>;
 
   return (
-    <div>
-      <h2>Pending Riders</h2>
-      <table className="table-auto w-full border-collapse border border-gray-300">
-        <thead>
-          <tr>
-            <th className="border border-gray-300 px-4 py-2">Name</th>
-            <th className="border border-gray-300 px-4 py-2">Email</th>
-            <th className="border border-gray-300 px-4 py-2">Region</th>
-            <th className="border border-gray-300 px-4 py-2">District</th>
-            <th className="border border-gray-300 px-4 py-2">Status</th>
-            <th className="border border-gray-300 px-4 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((rider) => (
-            <tr key={rider._id}>
-              <td className="border border-gray-300 px-4 py-2">{rider.name}</td>
-              <td className="border border-gray-300 px-4 py-2">{rider.email}</td>
-              <td className="border border-gray-300 px-4 py-2">{rider.region}</td>
-              <td className="border border-gray-300 px-4 py-2">{rider.district}</td>
-              <td className="border border-gray-300 px-4 py-2">{rider.status}</td>
-              <td className="border border-gray-300 px-4 py-2">
-                <button
-                  onClick={() => openModal(rider)}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  View Details
-                </button>
-                <button
-                  onClick={() => handleApproveReject(rider._id, "approve")}
-                  className="text-green-500 hover:text-green-700 ml-2"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => handleApproveReject(rider._id, "reject")}
-                  className="text-red-500 hover:text-red-700 ml-2"
-                >
-                  Reject
-                </button>
-              </td>
+    <div className="p-6">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">🛵 Pending Riders</h2>
+
+      <div className="overflow-x-auto shadow-lg rounded-xl">
+        {/* DaisyUI Table styling */}
+        <table className="table table-zebra w-full">
+          {/* Head */}
+          <thead>
+            <tr className="bg-base-200 text-sm font-semibold uppercase text-gray-700">
+              <th>Name</th>
+              <th>Email</th>
+              <th>Region</th>
+              <th>District</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.length > 0 ? (
+              data.map((rider) => (
+                <tr key={rider._id} className="hover">
+                  <td>{rider.name}</td>
+                  <td>{rider.email}</td>
+                  <td>{rider.region}</td>
+                  <td>{rider.district}</td>
+                  <td><span className="badge badge-warning font-semibold">{rider.status}</span></td>
+                  <td>
+                    {/* DaisyUI Button styling */}
+                    <button
+                      onClick={() => openModal(rider)}
+                      className="btn btn-sm btn-info text-white mr-2"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleApproveReject(rider._id, "approve")}
+                      className="btn btn-sm btn-success text-white mr-2"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleApproveReject(rider._id, "reject")}
+                      className="btn btn-sm btn-error text-white"
+                    >
+                      Reject
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="6"
+                  className="text-center text-gray-500 py-6 font-medium"
+                >
+                  No pending riders found. 🎉
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Modal to View Rider Details */}
+      {/* DaisyUI Modal for rider details */}
+      <input type="checkbox" id="rider_details_modal" className="modal-toggle" checked={!!selectedRider} readOnly/>
       {selectedRider && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h3 className="text-xl font-semibold mb-4">Rider Details</h3>
-            <p><strong>Name:</strong> {selectedRider.name}</p>
-            <p><strong>Email:</strong> {selectedRider.email}</p>
-            <p><strong>Region:</strong> {selectedRider.region}</p>
-            <p><strong>District:</strong> {selectedRider.district}</p>
-            <p><strong>NID:</strong> {selectedRider.nid}</p>
-            <p><strong>Warehouse:</strong> {selectedRider.warehouse}</p>
-            <p><strong>Status:</strong> {selectedRider.status}</p>
-            <p><strong>Created At:</strong> {new Date(selectedRider.create_at).toLocaleString()}</p>
+        <div className="modal" role="dialog" onClick={closeModal}>
+          <div className="modal-box p-8" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-2xl font-bold mb-4 text-primary">Rider Details</h3>
+            
+            <div className="space-y-3 text-base">
+              <p><strong>Name:</strong> <span className="font-medium">{selectedRider.name}</span></p>
+              <p><strong>Email:</strong> <span className="font-medium">{selectedRider.email}</span></p>
+              <p><strong>Region:</strong> <span className="font-medium badge badge-outline badge-primary">{selectedRider.region}</span></p>
+              <p><strong>District:</strong> <span className="font-medium badge badge-outline badge-secondary">{selectedRider.district}</span></p>
+              <p><strong>NID:</strong> <span className="font-medium">{selectedRider.nid}</span></p>
+              <p><strong>Warehouse:</strong> <span className="font-medium">{selectedRider.warehouse}</span></p>
+              <p><strong>Status:</strong> <span className="font-medium badge badge-warning">{selectedRider.status}</span></p>
+              <p>
+                <strong>Created At:</strong>{" "}
+                <span className="font-medium">{new Date(selectedRider.create_at).toLocaleString()}</span>
+              </p>
+            </div>
 
-            <div className="mt-4">
+            <div className="modal-action mt-6">
               <button
                 onClick={closeModal}
-                className="bg-gray-500 text-white py-2 px-4 rounded-lg mr-2"
+                className="btn btn-neutral"
               >
                 Close
               </button>
               <button
-                onClick={() => handleApproveReject(selectedRider._id, "approve")}
-                className="bg-green-500 text-white py-2 px-4 rounded-lg"
+                onClick={() => {handleApproveReject(selectedRider._id, "approve"); closeModal();}}
+                className="btn btn-success text-white"
               >
                 Approve
               </button>
               <button
-                onClick={() => handleApproveReject(selectedRider._id, "reject")}
-                className="bg-red-500 text-white py-2 px-4 rounded-lg"
+                onClick={() => {handleApproveReject(selectedRider._id, "reject"); closeModal();}}
+                className="btn btn-error text-white"
               >
                 Reject
               </button>
