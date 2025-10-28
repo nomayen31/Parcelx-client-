@@ -15,6 +15,10 @@ import TrackParcel from "../Pages/Dashboard/TrackParcel/TrackParcel";
 import BeARider from "../Pages/Dashboard/BeARider/BeARider";
 import PendingRiders from "../Pages/Dashboard/PendingRiders/PendingRiders";
 import ActiveRiders from "../Pages/Dashboard/ActiveRiders/ActiveRiders";
+import AboutUs from "../Pages/AboutUs/AboutUs";
+import Pricing from "../Pages/Pricing/Pricing";
+import Services from "../Pages/Services/Services";
+import AdminManager from "../Pages/Dashboard/AdminManager/AdminManager";
 
 export const router = createBrowserRouter([
   // 🏠 MAIN WEBSITE ROUTES
@@ -29,6 +33,19 @@ export const router = createBrowserRouter([
       {
         path: "coverage",
         element: <Coverage />,
+      },
+      {
+        path:'about',
+        element:<AboutUs/>
+      },
+      {
+        path:'pricing',
+        element:<Pricing/>
+      },
+      {
+
+        path:'services',
+        element:<Services/>
       },
       {
         path: "sendParcel",
@@ -92,11 +109,14 @@ export const router = createBrowserRouter([
           path:'pendingRiders',
           element:<PendingRiders/>
       }
-
       ,
       {
           path:'activeRiders',
           element:<ActiveRiders/>
+      },
+      {
+        path:'admin-manager',
+        element:<AdminManager/>
       }
     ],
   },

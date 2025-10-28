@@ -8,8 +8,9 @@ import {
   FiCreditCard,
   FiUser,
   FiMapPin,
-  FiUsers, // Icon for Active Riders
-  FiClock, // Icon for Pending Riders
+  FiUsers, // Active Riders
+  FiClock, // Pending Riders
+  FiShield, // Admin Manager
 } from "react-icons/fi";
 
 const DashbordLayout = () => {
@@ -25,7 +26,7 @@ const DashbordLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-gray-50">
-      {/* 🧭 Sidebar (desktop) */}
+      {/* 🧭 Sidebar (Desktop) */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-gray-900 text-white px-6 py-8 overflow-y-auto fixed inset-y-0 left-0">
         <h2 className="text-2xl font-bold mb-10">ParcelX Dashboard</h2>
 
@@ -50,13 +51,17 @@ const DashbordLayout = () => {
             <FiSend /> Send Parcel
           </NavLink>
 
-          {/* New Links */}
           <NavLink to="/dashboard/activeRiders" className={navItemClass}>
             <FiUsers /> Active Riders
           </NavLink>
 
           <NavLink to="/dashboard/pendingRiders" className={navItemClass}>
             <FiClock /> Pending Riders
+          </NavLink>
+
+          {/* 🛡️ Admin Manager */}
+          <NavLink to="/dashboard/admin-manager" className={navItemClass}>
+            <FiShield /> Admin Manager
           </NavLink>
         </nav>
       </aside>
@@ -108,11 +113,10 @@ const DashbordLayout = () => {
             Send Parcel
           </Link>
 
-          {/* New Links in Mobile Menu */}
           <Link
             to="/dashboard/activeRiders"
             onClick={() => setIsOpen(false)}
-            className="hover:text-lime-300"
+            className="hover:text-lime-300 flex items-center gap-2"
           >
             <FiUsers /> Active Riders
           </Link>
@@ -120,9 +124,18 @@ const DashbordLayout = () => {
           <Link
             to="/dashboard/pendingRiders"
             onClick={() => setIsOpen(false)}
-            className="hover:text-lime-300"
+            className="hover:text-lime-300 flex items-center gap-2"
           >
             <FiClock /> Pending Riders
+          </Link>
+
+          {/* 🛡️ Admin Manager (Mobile) */}
+          <Link
+            to="/dashboard/admin-manager"
+            onClick={() => setIsOpen(false)}
+            className="hover:text-lime-300 flex items-center gap-2"
+          >
+            <FiShield /> Admin Manager
           </Link>
         </div>
       )}

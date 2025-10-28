@@ -189,7 +189,6 @@ const PaymentForm = () => {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* --- Name --- */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Name on Card</label>
             <input
@@ -202,7 +201,6 @@ const PaymentForm = () => {
             />
           </div>
 
-          {/* --- Email --- */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
             <input
@@ -214,8 +212,6 @@ const PaymentForm = () => {
               required
             />
           </div>
-
-          {/* --- Billing Address --- */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Billing Address</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -247,7 +243,6 @@ const PaymentForm = () => {
             </div>
           </div>
 
-          {/* --- Card Details --- */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Card Details</label>
             <div className="p-3 border border-gray-300 rounded-lg bg-gray-50 focus-within:ring-2 focus-within:ring-indigo-500">
@@ -270,7 +265,6 @@ const PaymentForm = () => {
             </div>
           </div>
 
-          {/* --- Messages --- */}
           {errorMsg && (
             <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
               <strong>Error:</strong> {errorMsg}
@@ -283,7 +277,6 @@ const PaymentForm = () => {
             </div>
           )}
 
-          {/* --- Submit --- */}
           <button
             type="submit"
             disabled={!stripe || submitting}
@@ -302,7 +295,6 @@ const PaymentForm = () => {
         </form>
       </div>
 
-      {/* --- Toast Container --- */}
       <ToastContainer
         position="top-center"
         autoClose={3000}
