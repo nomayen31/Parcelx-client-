@@ -26,10 +26,10 @@ const PendingRiders = () => {
 
   // Handle approve or reject
   const handleApproveReject = (id, action) => {
-    const status = action === "approve" ? "Approved" : "Rejected";
+    const status = action === "approve" ? "active" : "Rejected";
 
     Swal.fire({
-      title: `${status === "Approved" ? "Approve" : "Reject"} Rider`,
+      title: `${status === "Approved" ? "active" : "Reject"} Rider`,
       text: `Are you sure you want to ${status.toLowerCase()} this rider?`,
       icon: "warning",
       showCancelButton: true,
