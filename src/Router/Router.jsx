@@ -19,6 +19,8 @@ import AboutUs from "../Pages/AboutUs/AboutUs";
 import Pricing from "../Pages/Pricing/Pricing";
 import Services from "../Pages/Services/Services";
 import AdminManager from "../Pages/Dashboard/AdminManager/AdminManager";
+import Forbidden from "../Pages/Forbidden/Forbidden";
+import AdminRoute from "./AdminRoute";
 
 export const router = createBrowserRouter([
   // 🏠 MAIN WEBSITE ROUTES
@@ -33,6 +35,10 @@ export const router = createBrowserRouter([
       {
         path: "coverage",
         element: <Coverage />,
+      },
+      {
+          path:'forbidden',
+          element:<Forbidden/>
       },
       {
         path:'about',
@@ -107,16 +113,16 @@ export const router = createBrowserRouter([
       },
       {
           path:'pendingRiders',
-          element:<PendingRiders/>
+          element:<AdminRoute><PendingRiders/></AdminRoute>
       }
       ,
       {
           path:'activeRiders',
-          element:<ActiveRiders/>
+          element:<AdminRoute><ActiveRiders/></AdminRoute>
       },
       {
         path:'admin-manager',
-        element:<AdminManager/>
+        element:<AdminRoute><AdminManager/></AdminRoute>
       }
     ],
   },
