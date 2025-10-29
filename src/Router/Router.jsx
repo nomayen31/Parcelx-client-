@@ -22,6 +22,7 @@ import AdminManager from "../Pages/Dashboard/AdminManager/AdminManager";
 import Forbidden from "../Pages/Forbidden/Forbidden";
 import AdminRoute from "./AdminRoute";
 import AssignRider from "../Pages/Dashboard/AssignRider/AssignRider";
+import PendingDeliveries from "../Pages/Dashboard/PedingDeleveries/PedingDeleveries";
 
 export const router = createBrowserRouter([
   // 🏠 MAIN WEBSITE ROUTES
@@ -107,6 +108,10 @@ export const router = createBrowserRouter([
       {
         path:'paymenthistory',
         element:<PaymentHistory/>
+      },
+      {
+          path:'pendingDeliveries',
+          element:<PendingDeliveries/>
       },
       {
           path:'track',

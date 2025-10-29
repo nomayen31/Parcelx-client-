@@ -12,11 +12,11 @@ import {
   FiClock, // Pending Riders
   FiShield, // Admin Manager
 } from "react-icons/fi";
-import useUserRole from "../Hooks/UseUserRole";
 import { FaMotorcycle } from "react-icons/fa6";
+import useUserRole from "../Hooks/UseUserRole";
 
 const DashboardLayout = () => {
-  const { role, roleLoading } = useUserRole(); // ✅ Hook for user role
+  const { role, roleLoading } = useUserRole();
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -27,7 +27,7 @@ const DashboardLayout = () => {
         : "hover:text-lime-300 text-gray-300 hover:bg-gray-800"
     }`;
 
-  // ✅ Show dynamic loading spinner while role is being fetched
+  // 🌀 Loading Spinner (while role is being determined)
   if (roleLoading) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50">
@@ -66,29 +66,35 @@ const DashboardLayout = () => {
           <NavLink to="/sendParcel" className={navItemClass}>
             <FiSend /> Send Parcel
           </NavLink>
+
+          {/* 🛡️ ADMIN LINKS */}
           {role === "admin" && (
             <>
               <NavLink to="/dashboard/activeRiders" className={navItemClass}>
                 <FiUsers /> Active Riders
               </NavLink>
-               <NavLink to="/dashboard/assign-rider" className={navItemClass}>
-                <FaMotorcycle></FaMotorcycle> Assign Rider
+              <NavLink to="/dashboard/assign-rider" className={navItemClass}>
+                <FaMotorcycle /> Assign Rider
               </NavLink>
-
               <NavLink to="/dashboard/pendingRiders" className={navItemClass}>
                 <FiClock /> Pending Riders
               </NavLink>
-
               <NavLink to="/dashboard/admin-manager" className={navItemClass}>
                 <FiShield /> Admin Manager
               </NavLink>
             </>
           )}
 
+          {/* 🏍️ RIDER LINKS */}
           {role === "rider" && (
-            <NavLink to="/dashboard/rider-tasks" className={navItemClass}>
-              <FiUsers /> Rider Tasks
-            </NavLink>
+            <>
+              <NavLink to="/dashboard/rider-tasks" className={navItemClass}>
+                <FiUsers /> Rider Tasks
+              </NavLink>
+              <NavLink to="/dashboard/pendingDeliveries" className={navItemClass}>
+                <FiClock /> Pending Deliveries
+              </NavLink>
+            </>
           )}
         </nav>
       </aside>
@@ -104,6 +110,7 @@ const DashboardLayout = () => {
       {/* 📱 Mobile Dropdown Menu */}
       {isOpen && (
         <div className="lg:hidden bg-gray-800 text-white flex flex-col items-start p-4 space-y-3">
+          {/* Common Links */}
           <Link to="/dashboard/myParcels" onClick={() => setIsOpen(false)}>
             My Parcels
           </Link>
@@ -131,18 +138,18 @@ const DashboardLayout = () => {
                 <FiUsers /> Active Riders
               </Link>
               <Link
+                to="/dashboard/assign-rider"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2"
+              >
+                <FaMotorcycle /> Assign Rider
+              </Link>
+              <Link
                 to="/dashboard/pendingRiders"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-2"
               >
                 <FiClock /> Pending Riders
-              </Link>
-               <Link
-                to="/dashboard/assign-riders"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2"
-              >
-                <FaMotorcycle /> Assign Riders
               </Link>
               <Link
                 to="/dashboard/admin-manager"
@@ -156,13 +163,22 @@ const DashboardLayout = () => {
 
           {/* ✅ Rider-only (Mobile) */}
           {role === "rider" && (
-            <Link
-              to="/dashboard/rider-tasks"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2"
-            >
-              <FiUsers /> Rider Tasks
-            </Link>
+            <>
+              <Link
+                to="/dashboard/rider-tasks"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2"
+              >
+                <FiUsers /> Rider Tasks
+              </Link>
+              <Link
+                to="/dashboard/pendingDeliveries"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2"
+              >
+                <FiClock /> Pending Deliveries
+              </Link>
+            </>
           )}
         </div>
       )}

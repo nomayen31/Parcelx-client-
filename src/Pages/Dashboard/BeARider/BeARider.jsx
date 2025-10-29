@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import riderImage from "../../../../public/assets/agent-pending.png"; // Import the image
+import riderImage from "../../../../public/assets/agent-pending.png";
 import UseAuth from "../../../Hooks/UseAuth";
-import regionData from "../../../../public/assets/warehouses.json"; // JSON data containing regions and districts
+import regionData from "../../../../public/assets/warehouses.json";
 import Swal from "sweetalert2";
 import UseAxiosSecure from "../../../Hooks/UseAxiosSecure";
 
 const BeARider = () => {
-  const { user } = UseAuth(); // Access user data from UseAuth hook
+  const { user } = UseAuth();
+  const axiosSecure = UseAxiosSecure();
+
   const {
     register,
     handleSubmit,
@@ -18,78 +20,97 @@ const BeARider = () => {
 
   const [regions, setRegions] = useState([]);
   const [districts, setDistricts] = useState([]);
-  const axiosSecure = UseAxiosSecure();
+  const [loading, setLoading] = useState(false);
 
+  // ✅ Populate regions
   useEffect(() => {
-    // Extract unique regions from the JSON data
     const uniqueRegions = [...new Set(regionData.map((item) => item.region))];
     setRegions(uniqueRegions);
   }, []);
 
+  // ✅ Autofill user data
   useEffect(() => {
-    // Automatically populate form with user's details if available
     if (user) {
-      setValue("name", user.displayName || ""); // Set user's name
-      setValue("email", user.email || ""); // Set user's email
+      setValue("name", user.displayName || "");
+      setValue("email", user.email || "");
     }
   }, [user, setValue]);
 
+  // ✅ Update districts on region change
   const handleRegionChange = (e) => {
     const selectedRegion = e.target.value;
-    // Find districts associated with the selected region
     const regionDistricts = regionData.filter(
       (item) => item.region === selectedRegion
     );
     setDistricts(regionDistricts.map((item) => item.district));
-    setValue("district", ""); // Reset district field on region change
+    setValue("district", "");
   };
 
+  // ✅ Submit rider registration
   const onSubmit = async (data) => {
-    // Add status and created_at to the data
     const riderData = {
       ...data,
-      status: "Pending", // Example status, can be 'Active', 'Pending', etc.
+      status: "Pending",
       create_at: new Date().toISOString(),
     };
 
     try {
-      // Send data to backend using axiosSecure
-      const res = await axiosSecure.post("/riders", riderData);
+      setLoading(true);
 
-      // Check if backend returned insertedId
-      if (res.data.insertedId) {
+      // 🧠 Check if rider already applied
+      const checkRes = await axiosSecure.get("/riders/pending");
+      const existingRider = checkRes.data.find(
+        (r) => r.email === riderData.email
+      );
+      if (existingRider) {
         Swal.fire({
-          title: "Success!",
-          text: "Your registration has been submitted successfully!",
-          icon: "success",
+          title: "Already Applied",
+          text: "You have already submitted a rider request. Please wait for admin approval.",
+          icon: "info",
           confirmButtonText: "OK",
         });
+        setLoading(false);
+        return;
+      }
 
-        // Reset the form after successful submission
-        reset(); // Reset form fields after submission
+      // 🧾 Submit to backend
+      const res = await axiosSecure.post("/riders", riderData);
+
+      // 🧩 FIXED: Check nested response
+      if (res.data.data?.insertedId) {
+        Swal.fire({
+          title: "Success!",
+          text: "Your rider registration has been submitted successfully!",
+          icon: "success",
+          confirmButtonColor: "#16a34a",
+        });
+        reset();
       } else {
         throw new Error("Failed to insert data");
       }
     } catch (error) {
+      console.error("Error submitting rider data:", error);
       Swal.fire({
         title: "Error!",
-        text: "There was an error submitting your registration. Please try again.",
+        text:
+          error?.response?.data?.message ||
+          "There was an error submitting your registration. Please try again.",
         icon: "error",
-        confirmButtonText: "OK",
+        confirmButtonColor: "#dc2626",
       });
-      console.error("Error submitting rider data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8">
       <div className="bg-white rounded-3xl shadow-lg p-12 max-w-8xl w-full flex gap-12">
+        {/* Left Side: Form */}
         <div className="flex-1">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">Be a Rider</h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Enjoy fast, reliable parcel delivery with real-time tracking and
-            zero hassle. From personal packages to business shipments — we
-            deliver on time, every time.
+            Join our delivery team! Reliable, fast, and flexible work with real-time tracking and great rewards.
           </p>
 
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">
@@ -98,6 +119,7 @@ const BeARider = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
+              {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Your Name
@@ -105,23 +127,28 @@ const BeARider = () => {
                 <input
                   type="text"
                   placeholder="Your Name"
-                  defaultValue={user?.displayName || ""} // Pre-fill with user display name
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  defaultValue={user?.displayName || ""}
                   {...register("name", { required: "Name is required" })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
                 {errors.name && (
                   <p className="text-red-500 text-sm">{errors.name.message}</p>
                 )}
               </div>
+
+              {/* Age */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Your Age
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   placeholder="Your Age"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  {...register("age", { required: "Age is required" })}
+                  {...register("age", {
+                    required: "Age is required",
+                    min: { value: 18, message: "Minimum age is 18" },
+                  })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
                 {errors.age && (
                   <p className="text-red-500 text-sm">{errors.age.message}</p>
@@ -130,6 +157,7 @@ const BeARider = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Your Email
@@ -137,21 +165,23 @@ const BeARider = () => {
                 <input
                   type="email"
                   placeholder="Your Email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   {...register("email", { required: "Email is required" })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
                 {errors.email && (
                   <p className="text-red-500 text-sm">{errors.email.message}</p>
                 )}
               </div>
+
+              {/* Region */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Your Region
                 </label>
                 <select
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white appearance-none"
                   {...register("region", { required: "Region is required" })}
                   onChange={handleRegionChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
                 >
                   <option value="">Select your region</option>
                   {regions.map((region, index) => (
@@ -161,23 +191,22 @@ const BeARider = () => {
                   ))}
                 </select>
                 {errors.region && (
-                  <p className="text-red-500 text-sm">
-                    {errors.region.message}
-                  </p>
+                  <p className="text-red-500 text-sm">{errors.region.message}</p>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              {/* District */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   District
                 </label>
                 <select
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white appearance-none"
                   {...register("district", {
                     required: "District is required",
                   })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
                 >
                   <option value="">Select your district</option>
                   {districts.map((district, index) => (
@@ -192,6 +221,8 @@ const BeARider = () => {
                   </p>
                 )}
               </div>
+
+              {/* NID */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   NID No
@@ -199,8 +230,8 @@ const BeARider = () => {
                 <input
                   type="text"
                   placeholder="NID"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   {...register("nid", { required: "NID is required" })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
                 {errors.nid && (
                   <p className="text-red-500 text-sm">{errors.nid.message}</p>
@@ -208,17 +239,18 @@ const BeARider = () => {
               </div>
             </div>
 
+            {/* Warehouse */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Which wire-house you want to work?
+                Which warehouse you want to work in?
               </label>
               <select
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white appearance-none"
                 {...register("warehouse", {
-                  required: "Wire-house selection is required",
+                  required: "Warehouse selection is required",
                 })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
               >
-                <option value="">Select wire-house</option>
+                <option value="">Select warehouse</option>
                 <option value="warehouse1">Warehouse 1</option>
                 <option value="warehouse2">Warehouse 2</option>
               </select>
@@ -231,13 +263,19 @@ const BeARider = () => {
 
             <button
               type="submit"
-              className="w-full bg-lime-400 hover:bg-lime-500 text-gray-900 font-medium py-3.5 px-6 rounded-lg transition-colors duration-200"
+              disabled={loading}
+              className={`w-full font-medium py-3.5 px-6 rounded-lg transition-colors duration-200 ${
+                loading
+                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                  : "bg-lime-400 hover:bg-lime-500 text-gray-900"
+              }`}
             >
-              Submit
+              {loading ? "Submitting..." : "Submit"}
             </button>
           </form>
         </div>
 
+        {/* Right Side: Illustration */}
         <div className="flex-1 flex items-center justify-center">
           <img src={riderImage} alt="Rider" className="w-full max-w-md" />
         </div>
