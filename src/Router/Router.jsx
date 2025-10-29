@@ -23,6 +23,7 @@ import Forbidden from "../Pages/Forbidden/Forbidden";
 import AdminRoute from "./AdminRoute";
 import AssignRider from "../Pages/Dashboard/AssignRider/AssignRider";
 import PendingDeliveries from "../Pages/Dashboard/PedingDeleveries/PedingDeleveries";
+import RiderRoute from "./RiderRoute";
 
 export const router = createBrowserRouter([
   // 🏠 MAIN WEBSITE ROUTES
@@ -111,7 +112,7 @@ export const router = createBrowserRouter([
       },
       {
           path:'pendingDeliveries',
-          element:<PendingDeliveries/>
+          element:<RiderRoute><PendingDeliveries/></RiderRoute>
       },
       {
           path:'track',
