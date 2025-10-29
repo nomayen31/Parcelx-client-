@@ -21,6 +21,7 @@ import Services from "../Pages/Services/Services";
 import AdminManager from "../Pages/Dashboard/AdminManager/AdminManager";
 import Forbidden from "../Pages/Forbidden/Forbidden";
 import AdminRoute from "./AdminRoute";
+import AssignRider from "../Pages/Dashboard/AssignRider/AssignRider";
 
 export const router = createBrowserRouter([
   // 🏠 MAIN WEBSITE ROUTES
@@ -110,6 +111,10 @@ export const router = createBrowserRouter([
       {
           path:'track',
           element:<TrackParcel/>
+      },
+      {
+        path:'assign-rider',
+        element:<AdminRoute><AssignRider/></AdminRoute>
       },
       {
           path:'pendingRiders',

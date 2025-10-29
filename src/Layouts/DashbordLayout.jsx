@@ -13,6 +13,7 @@ import {
   FiShield, // Admin Manager
 } from "react-icons/fi";
 import useUserRole from "../Hooks/UseUserRole";
+import { FaMotorcycle } from "react-icons/fa6";
 
 const DashboardLayout = () => {
   const { role, roleLoading } = useUserRole(); // ✅ Hook for user role
@@ -65,12 +66,13 @@ const DashboardLayout = () => {
           <NavLink to="/sendParcel" className={navItemClass}>
             <FiSend /> Send Parcel
           </NavLink>
-
-          {/* ✅ Role-based Navigation */}
           {role === "admin" && (
             <>
               <NavLink to="/dashboard/activeRiders" className={navItemClass}>
                 <FiUsers /> Active Riders
+              </NavLink>
+               <NavLink to="/dashboard/assign-rider" className={navItemClass}>
+                <FaMotorcycle></FaMotorcycle> Assign Rider
               </NavLink>
 
               <NavLink to="/dashboard/pendingRiders" className={navItemClass}>
@@ -134,6 +136,13 @@ const DashboardLayout = () => {
                 className="flex items-center gap-2"
               >
                 <FiClock /> Pending Riders
+              </Link>
+               <Link
+                to="/dashboard/assign-riders"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2"
+              >
+                <FaMotorcycle /> Assign Riders
               </Link>
               <Link
                 to="/dashboard/admin-manager"
