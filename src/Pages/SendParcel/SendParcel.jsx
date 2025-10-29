@@ -4,12 +4,14 @@ import Swal from "sweetalert2";
 import regionData from "../../../public/assets/warehouses.json";
 import UseAuth from "../../Hooks/UseAuth";
 import UseAxiosSecure from "../../Hooks/UseAxiosSecure";
+import { useNavigate } from "react-router-dom";
 
 const SendParcel = () => {
   const { register, handleSubmit, watch, reset } = useForm();
   const [cost, setCost] = useState(0);
   const { user } = UseAuth();
   const axiosSecure = UseAxiosSecure();
+  const navigate = useNavigate();
 
   const type = watch("type");
   const senderRegion = watch("senderRegion");
@@ -26,7 +28,6 @@ const SendParcel = () => {
   const uniqueRegions = [...new Set(regionData.map((item) => item.region))];
   const allDistricts = [...new Set(regionData.map((item) => item.district))];
 
-  // Get districts dynamically based on region
   const getDistrictsByRegion = (region) => {
     if (!region) return allDistricts;
     const districts = regionData
@@ -69,17 +70,33 @@ const SendParcel = () => {
       title: "📦 Delivery Cost Breakdown",
       html: `
         <div style="text-align:left; font-size:15px;">
-          <p><strong>Parcel Type:</strong> ${data.type === "document" ? "Document" : "Non-Document"}</p>
-          ${data.type === "non-document" ? `<p><strong>Weight:</strong> ${weight} kg</p>` : ""}
+          <p><strong>Parcel Type:</strong> ${
+            data.type === "document" ? "Document" : "Non-Document"
+          }</p>
+          ${
+            data.type === "non-document"
+              ? `<p><strong>Weight:</strong> ${weight} kg</p>`
+              : ""
+          }
           <p><strong>From:</strong> ${data.senderRegion || "N/A"}</p>
           <p><strong>To:</strong> ${data.receiverRegion || "N/A"}</p>
           <hr style="margin:10px 0;">
           ${
             data.type === "document"
-              ? `<p>Base Rate (${isWithinCity ? "Within City" : "Outside City"}): ৳${isWithinCity ? 60 : 80}</p>`
+              ? `<p>Base Rate (${isWithinCity ? "Within City" : "Outside City"}): ৳${
+                  isWithinCity ? 60 : 80
+                }</p>`
               : `<p>Base Rate (Up to 3kg): ৳${isWithinCity ? 110 : 150}</p>
-                 ${weight > 3 ? `<p>Extra Weight Charge: ৳${extraKg * 40}</p>` : ""}
-                 ${!isWithinCity && weight > 3 ? `<p>Outside City Extra: ৳40</p>` : ""}`
+                 ${
+                   weight > 3
+                     ? `<p>Extra Weight Charge: ৳${extraKg * 40}</p>`
+                     : ""
+                 }
+                 ${
+                   !isWithinCity && weight > 3
+                     ? `<p>Outside City Extra: ৳40</p>`
+                     : ""
+                 }`
           }
           <hr style="margin:10px 0;">
           <h3><strong>Total Cost:</strong> ৳${deliveryCost}</h3>
@@ -87,8 +104,8 @@ const SendParcel = () => {
       `,
       icon: "info",
       showCancelButton: true,
-      confirmButtonText: "✅ Confirm Booking",
-      cancelButtonText: "❌ Cancel",
+      confirmButtonText: " Confirm Booking",
+      cancelButtonText: " Cancel",
       confirmButtonColor: "#22c55e",
       cancelButtonColor: "#d33",
       width: 450,
@@ -149,11 +166,10 @@ const SendParcel = () => {
 
     try {
       const res = await axiosSecure.post("/parcels", parcel);
-      // Your server responds with: { success, message, data: { insertedId, ... } }
-      const insertedId = res?.data?.data?.insertedId;
+      const insertedId = res?.data?.data?.insertedId || res?.data?.insertedId;
 
       if (insertedId) {
-        await Swal.fire({
+        Swal.fire({
           icon: "success",
           title: "🎉 Booking Confirmed!",
           html: `
@@ -164,11 +180,28 @@ const SendParcel = () => {
               <p style="margin-top:8px"><strong>Total Cost:</strong> ৳${deliveryCost}</p>
             </div>
           `,
+          confirmButtonText: "💳 Proceed to Payment",
+          showCancelButton: true,
+          cancelButtonText: "❌ Later",
           confirmButtonColor: "#16a34a",
+          cancelButtonColor: "#d33",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            navigate(`/dashboard/myParcels`);
+          } else {
+            Swal.fire({
+              title: "ℹ️ Payment Pending",
+              text: "You can complete the payment later from your dashboard.",
+              icon: "info",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          }
         });
+
         reset();
       } else {
-        await Swal.fire({
+        Swal.fire({
           icon: "error",
           title: "Save Failed",
           text: "We couldn't save your parcel. Please try again.",
@@ -176,8 +209,11 @@ const SendParcel = () => {
         });
       }
     } catch (error) {
-      const msg = error?.response?.data?.message || error.message || "Failed to save parcel.";
-      await Swal.fire({
+      const msg =
+        error?.response?.data?.message ||
+        error.message ||
+        "Failed to save parcel.";
+      Swal.fire({
         icon: "error",
         title: "Save Failed",
         text: msg,
@@ -188,7 +224,9 @@ const SendParcel = () => {
 
   return (
     <div className="bg-white rounded-2xl shadow-lg max-w-6xl mx-auto my-10 p-10 border border-gray-100">
-      <h1 className="text-4xl font-semibold text-gray-800 mb-2">Add Parcel</h1>
+      <h1 className="text-4xl font-semibold text-gray-800 mb-2">
+        Add Parcel
+      </h1>
       <p className="text-gray-500 mb-8">
         Enter your parcel details below to create a new booking.
       </p>
@@ -202,11 +240,19 @@ const SendParcel = () => {
           <div className="grid md:grid-cols-3 gap-4">
             <div className="flex items-center space-x-4">
               <label className="flex items-center space-x-2">
-                <input type="radio" value="document" {...register("type", { required: true })} />
+                <input
+                  type="radio"
+                  value="document"
+                  {...register("type", { required: true })}
+                />
                 <span>Document</span>
               </label>
               <label className="flex items-center space-x-2">
-                <input type="radio" value="non-document" {...register("type", { required: true })} />
+                <input
+                  type="radio"
+                  value="non-document"
+                  {...register("type", { required: true })}
+                />
                 <span>Non-Document</span>
               </label>
             </div>
