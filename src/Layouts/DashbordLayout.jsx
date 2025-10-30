@@ -91,8 +91,17 @@ const DashboardLayout = () => {
               <NavLink to="/dashboard/rider-tasks" className={navItemClass}>
                 <FiUsers /> Rider Tasks
               </NavLink>
-              <NavLink to="/dashboard/pendingDeliveries" className={navItemClass}>
+              <NavLink
+                to="/dashboard/pendingDeliveries"
+                className={navItemClass}
+              >
                 <FiClock /> Pending Deliveries
+              </NavLink>
+              <NavLink
+                to="/dashboard/complited-deliveries"
+                className={navItemClass}
+              >
+                <FiPackage /> Completed Deliveries
               </NavLink>
             </>
           )}
@@ -178,6 +187,12 @@ const DashboardLayout = () => {
               >
                 <FiClock /> Pending Deliveries
               </Link>
+              <NavLink
+                to="/dashboard/complited-deliveries"
+                className={navItemClass}
+              >
+                <FiPackage /> Completed Deliveries
+              </NavLink>
             </>
           )}
         </div>
