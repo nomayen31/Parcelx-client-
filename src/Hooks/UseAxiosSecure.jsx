@@ -3,7 +3,7 @@ import axios from "axios";
 import UseAuth from "./UseAuth";
 
 const axiosSecure = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://parcelx-server.vercel.app/",
 });
 
 const UseAxiosSecure = () => {
