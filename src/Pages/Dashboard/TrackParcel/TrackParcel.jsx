@@ -212,7 +212,7 @@ const TrackParcel = () => {
         {trackingData && !trackingData.success && (
           <div className="text-center text-gray-600 mt-10 bg-white p-6 rounded-xl shadow-lg">
             <p className="text-xl">
-              ❌ No parcel found with ID:{" "}
+               No parcel found with ID:{" "}
               <span className="font-mono font-bold text-red-500">
                 {trackingId}
               </span>
