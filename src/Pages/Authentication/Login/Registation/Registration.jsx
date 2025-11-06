@@ -96,7 +96,7 @@ const Registration = () => {
         provider: "email",
       };
 
-      await axios.post("https://parcelx-server.vercel.app/users", userInfo);
+      await axios.post("https://parcelx-auth-server.onrender.com/users", userInfo);
 
       alert("🎉 Registration successful!");
       navigate("/");
@@ -131,7 +131,7 @@ const Registration = () => {
         createdAt: new Date().toISOString(),
         provider: "google",
       };
-      await axios.post("https://parcelx-server.vercel.app/users", userInfo);
+      await axios.post("https://parcelx-auth-server.onrender.com/users", userInfo);
       alert("Logged in with Google!");
       navigate("/");
     } catch (err) {
